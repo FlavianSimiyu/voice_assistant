@@ -1,32 +1,41 @@
-from flask import Flask, request, render_template
-import openai
 import speech_recognition as sr
+import pyttsx3
+import threading
 
-app = Flask(__name__)
+def speak(text):
+    engine = pyttsx3.init()
+    engine.say(text)
+    engine.runAndWait()
 
-openai.api_key = "your-openai-api-key"
-
-def transcribe_audio(audio_file):
+def listen():
     recognizer = sr.Recognizer()
-    with sr.AudioFile(audio_file) as source:
-        audio = recognizer.record(source)
-    return recognizer.recognize_google(audio)
+    with sr.Microphone() as source:
+        print("Listening...")
+        recognizer.adjust_for_ambient_noise(source)
+        try:
+            audio = recognizer.listen(source, timeout=5)
+            text = recognizer.recognize_google(audio)
+            print(f"You said: {text}")
+            return text
+        except sr.UnknownValueError:
+            print("Sorry, I couldn't understand that.")
+        except sr.RequestError:
+            print("Could not request results. Check internet connection.")
+        except sr.WaitTimeoutError:
+            print("No speech detected. Try again.")
+        return ""
 
-@app.route("/", methods=["GET", "POST"])
-def chat():
-    if request.method == "POST":
-        if "audio" in request.files:
-            audio_file = request.files["audio"]
-            user_input = transcribe_audio(audio_file)
-        else:
-            user_input = request.form["user_input"]
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[{"role": "user", "content": user_input}]
-        )
-        ai_response = response["choices"][0]["message"]["content"]
-        return render_template("index.html", user_input=user_input, ai_response=ai_response)
-    return render_template("index.html")
+def main():
+    while True:
+        command = input("Press Enter to start listening or type 'exit' to quit: ")
+        if command.lower() == "exit":
+            break
+        
+        user_input = listen()
+        if user_input:
+            response = f"You said: {user_input}. How can I assist you further?"
+            print(response)
+            threading.Thread(target=speak, args=(response,)).start()
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    main()
