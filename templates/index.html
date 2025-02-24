@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Study Partner</title>
+</head>
+<body>
+    <h1>Study Partner</h1>
+    <!-- Add the updated form here -->
+    <form method="POST" enctype="multipart/form-data">
+        <label for="user_input">Ask me anything:</label><br>
+        <input type="text" id="user_input" name="user_input"><br><br>
+        <label for="audio">Or record your question:</label><br>
+        <input type="file" id="audio" name="audio" accept="audio/*"><br><br>
+        <button type="submit">Submit</button>
+    </form>
+
+    <!-- Display the user's question and AI response -->
+    {% if user_input %}
+        <h2>Your Question:</h2>
+        <p>{{ user_input }}</p>
+        <h2>AI Response:</h2>
+        <p>{{ ai_response }}</p>
+    {% endif %}
+</body>
+</html>
